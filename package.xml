@@ -1,0 +1,24 @@
+<package>
+ <name>s8_object_follower</name>
+  <version>0.0.0</version>
+  <description>
+    Object following node that will get input from camera object distance node and publish to motor controller
+  </description>
+  <license>BSD</license>
+
+  <author email="lwiener@kth.se">Lucas</author>
+  <maintainer email="lwiener@kth.se">Lucas</maintainer>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <build_depend>roscpp</build_depend>
+  <build_depend>geometry_msgs</build_depend>
+  <build_depend>s8_common_node</build_depend>
+  <build_depend>s8_ip</build_depend>
+
+  <run_depend>roscpp</run_depend>
+  <run_depend>geometry_msgs</run_depend>
+  <run_depend>s8_common_node</run_depend>
+  <run_depend>s8_ip</run_depend>
+
+</package>
