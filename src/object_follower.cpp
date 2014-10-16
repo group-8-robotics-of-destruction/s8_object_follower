@@ -12,7 +12,7 @@
 #define BUFFER_SIZE         1000
 
 #define TOPIC_TWIST         "/s8/twist"
-#define TOPIC_DIST_POSE     "/s8/dist_pose"
+#define TOPIC_DIST_POSE     "/s8_ip/distPose"
 
 class WallFollower : public s8::Node {
     const int hz;
@@ -20,8 +20,11 @@ class WallFollower : public s8::Node {
     ros::Publisher twist_publisher;
     ros::Subscriber dist_pose_subscriber;
 
+	double w;
+	double v;
+
 public:
-    WallFollower(int hz) : hz(hz) {
+    WallFollower(int hz) : hz(hz), v(0.0), w(0.0) {
         twist_publisher = nh.advertise<geometry_msgs::Twist>(TOPIC_TWIST, BUFFER_SIZE);
         dist_pose_subscriber = nh.subscribe<s8_ip::distPose>(TOPIC_DIST_POSE, BUFFER_SIZE, &WallFollower::dist_pose_callback, this);
     }
@@ -34,16 +37,21 @@ private:
     void dist_pose_callback(const s8_ip::distPose::ConstPtr & dist_pose) {
         int pose = dist_pose->pose;
         int dist = dist_pose->dist;
-        ROS_INFO("pose: %d dist: %d", pose, dist);
+        compute_twist(dist, pose, v, w);
+        ROS_INFO("pose: %d dist: %d. Computed v: %lf w: %lf", pose, dist, v, w);
     }
 
     void publish_twist() {
-        double v = 0.5;
-        double w = 0.5;
         geometry_msgs::Twist twist;
         twist.linear.x = v;
         twist.angular.z = w;
+		twist_publisher.publish(twist);
         ROS_INFO("v: %lf w: %lf", v, w);
+    }
+
+    void compute_twist(double dist, double pose, double & v, double & w) {
+        w = -pose / 100.0;
+        v = 0.3;
     }
 };
 
