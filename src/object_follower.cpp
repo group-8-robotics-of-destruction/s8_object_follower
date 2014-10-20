@@ -18,8 +18,10 @@
 #define PARAM_DIST_TRESHOLD_NEAR_DEFAULT        650
 #define PARAM_DIST_TRESHOLD_FAR_NAME            "dist_treshold_far"
 #define PARAM_DIST_TRESHOLD_FAR_DEFAULT         1000
-#define PARAM_DIST_BACK_NAME			"dist_back"
-#define PARAM_DIST_BACK_DEFAULT			250
+#define PARAM_DIST_BACK_NAME                    "dist_back"
+#define PARAM_DIST_BACK_DEFAULT                 250
+#define PARAM_SPEED_NAME                        "speed"
+#define PARAM_SPEED_DEFAULT                     0.4
 
 class WallFollower : public s8::Node {
     const int hz;
@@ -27,8 +29,8 @@ class WallFollower : public s8::Node {
     ros::Publisher twist_publisher;
     ros::Subscriber dist_pose_subscriber;
 
-	double w;
-	double v;
+    double w;
+    double v;
 
     int dist_treshold_near;
     int dist_treshold_far;
@@ -37,7 +39,7 @@ class WallFollower : public s8::Node {
     double speed;
 
 public:
-    WallFollower(int hz) : hz(hz), v(0.0), w(0.0), speed(0.4) {
+    WallFollower(int hz) : hz(hz), v(0.0), w(0.0) {
         add_params();
         print_params();
         twist_publisher = nh.advertise<geometry_msgs::Twist>(TOPIC_TWIST, BUFFER_SIZE);
@@ -60,7 +62,7 @@ private:
         geometry_msgs::Twist twist;
         twist.linear.x = v;
         twist.angular.z = w;
-		twist_publisher.publish(twist);
+        twist_publisher.publish(twist);
         ROS_INFO("v: %lf w: %lf", v, w);
     }
 
@@ -81,13 +83,14 @@ private:
             v = speed;
             w = -pose / (dist/5.0);
         }
-	ROS_INFO("w: %lf, pose: %lf, distance: %lf", w,pose,dist);
+    ROS_INFO("w: %lf, pose: %lf, distance: %lf", w,pose,dist);
     }
 
     void add_params() {
         add_param(PARAM_DIST_TRESHOLD_NEAR_NAME, dist_treshold_near, PARAM_DIST_TRESHOLD_NEAR_DEFAULT);
         add_param(PARAM_DIST_TRESHOLD_FAR_NAME, dist_treshold_far, PARAM_DIST_TRESHOLD_FAR_DEFAULT);
         add_param(PARAM_DIST_BACK_NAME, dist_back, PARAM_DIST_BACK_DEFAULT);
+        add_param(PARAM_SPEED_NAME, speed, PARAM_SPEED_DEFAULT);
     }
 };
 
