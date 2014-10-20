@@ -6,13 +6,20 @@
 #include <s8_ip/distPose.h>
 #include <s8_common_node/Node.h>
 
-#define NODE_NAME           "s8_wall_follower_node"
+#define NODE_NAME           "s8_object_follower_node"
 
 #define HZ                  10
 #define BUFFER_SIZE         1000
 
 #define TOPIC_TWIST         "/s8/twist"
 #define TOPIC_DIST_POSE     "/s8_ip/distPose"
+
+#define PARAM_DIST_TRESHOLD_NEAR_NAME           "dist_treshold_near"
+#define PARAM_DIST_TRESHOLD_NEAR_DEFAULT        650
+#define PARAM_DIST_TRESHOLD_FAR_NAME            "dist_treshold_far"
+#define PARAM_DIST_TRESHOLD_FAR_DEFAULT         1000
+#define PARAM_DIST_BACK_NAME			"dist_back"
+#define PARAM_DIST_BACK_DEFAULT			250
 
 class WallFollower : public s8::Node {
     const int hz;
@@ -23,14 +30,22 @@ class WallFollower : public s8::Node {
 	double w;
 	double v;
 
+    int dist_treshold_near;
+    int dist_treshold_far;
+    int dist_back;
+
+    double speed;
+
 public:
-    WallFollower(int hz) : hz(hz), v(0.0), w(0.0) {
+    WallFollower(int hz) : hz(hz), v(0.0), w(0.0), speed(0.4) {
+        add_params();
+        print_params();
         twist_publisher = nh.advertise<geometry_msgs::Twist>(TOPIC_TWIST, BUFFER_SIZE);
         dist_pose_subscriber = nh.subscribe<s8_ip::distPose>(TOPIC_DIST_POSE, BUFFER_SIZE, &WallFollower::dist_pose_callback, this);
     }
 
     void update() {
-        publish_twist();   
+        publish_twist();
     }
 
 private:
@@ -50,8 +65,29 @@ private:
     }
 
     void compute_twist(double dist, double pose, double & v, double & w) {
-        w = -pose / 100.0;
-        v = 0.3;
+        if(dist > dist_treshold_far) {
+            v = 0.0;
+            w = 0.0;
+        }
+        else if ( dist < dist_back){
+            v = -speed;
+            w = 0.0;
+        }
+        else if (dist > dist_back && dist < dist_treshold_near){
+            v = 0.0;
+            w = -pose / (dist/5.0);
+        }
+        else {
+            v = speed;
+            w = -pose / (dist/5.0);
+        }
+	ROS_INFO("w: %lf, pose: %lf, distance: %lf", w,pose,dist);
+    }
+
+    void add_params() {
+        add_param(PARAM_DIST_TRESHOLD_NEAR_NAME, dist_treshold_near, PARAM_DIST_TRESHOLD_NEAR_DEFAULT);
+        add_param(PARAM_DIST_TRESHOLD_FAR_NAME, dist_treshold_far, PARAM_DIST_TRESHOLD_FAR_DEFAULT);
+        add_param(PARAM_DIST_BACK_NAME, dist_back, PARAM_DIST_BACK_DEFAULT);
     }
 };
 
